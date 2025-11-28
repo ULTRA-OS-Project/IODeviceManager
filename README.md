@@ -1,131 +1,128 @@
-# PixelFX
+# IODeviceManager
 
-**Professional Bitmap Processing for UltraCanvas**
+**Cross-Platform Hardware Device Management for ULTRA OS**
 
-PixelFX is UltraCanvas's comprehensive bitmap manipulation and analytics engine, delivering industrial-strength image processing with minimal memory footprint. Built on libvips and wrapped in an intuitive C++20 API.
+IODeviceManager is a unified hardware abstraction layer providing consistent access to scanners, cameras, GPIO, and other I/O devices across Linux, Windows, and macOS through native protocols.
 
 ---
 
-## Performance
+## Implemented Categories
 
-- **Demand-driven processing** — Only compute what's needed, when it's needed
-- **Multi-threaded by design** — Automatic CPU utilization across all cores
-- **Memory efficient** — Process 10GB images on machines with 2GB RAM
-- **Hardware accelerated** — SIMD instructions (SSE, AVX, NEON)
-- **2-3× faster** than traditional libraries for typical operations
+### Scanners
+
+Unified scanning API across all major platforms and protocols.
+
+| Protocol | Platform | Description |
+|----------|----------|-------------|
+| SANE | Linux | Scanner Access Now Easy |
+| WIA | Windows | Windows Image Acquisition |
+| TWAIN | Windows | Industry standard protocol |
+| ICA | macOS | Image Capture Architecture |
+| eSCL | Network | AirPrint/driverless scanning |
+
+**Features:** Device enumeration, single/multi-page scanning, resolution/color configuration, scan area definition, preview mode, hot-plug support.
+
+---
+
+### Cameras 
+
+Complete camera ecosystem from webcams to professional DSLRs and network cameras.
+
+| Phase | Type | Protocols |
+|-------|------|-----------|
+| Phase 1 | USB Webcams | V4L2 (Linux), Media Foundation (Windows), AVFoundation (macOS) |
+| Phase 2 | Built-in Webcams | Platform-native APIs |
+| Phase 3 | DSLR Cameras | libgphoto2 (Linux), WIA (Windows), ImageCapture (macOS) |
+| Phase 4 | Network/IP Cameras | RTSP streaming, ONVIF discovery |
+
+**Features:** Single frame and continuous capture, resolution/format control, exposure/focus/white balance, PTZ controls, multi-stream support, camera discovery (ONVIF/UPnP/mDNS).
+
+---
+
+### GPIO 
+
+Hardware I/O control for embedded platforms via libgpiod wrapper.
+
+**Platforms:** Linux (Raspberry Pi, ARM boards)
+
+**Features:** Digital I/O (read/write), PWM control, interrupt handling, I2C/SPI/UART protocols, high-level abstractions (LED, Button, Servo).
+
+---
+
+## Future Categories
+
+| Category | Status | Planned Protocols |
+|----------|--------|-------------------|
+| Printer | Planned | CUPS, Windows Print API |
+| Audio | Planned | ALSA/PulseAudio, WASAPI, CoreAudio |
+| Storage | Planned | USB mass storage |
+| Network | Planned | Network interface management |
+| Display | Planned | Monitor detection/configuration |
+| HID | Planned | Generic HID devices |
 
 ---
 
 ## Architecture
 
 ```
-PixelFX/
+IODeviceManager/
 ├── include/
-│   ├── PixelFX.h                    # Main API header
-│   ├── PixelFXTypes.h               # Image data structures
-│   ├── PixelFXArithmetic.h          # Math operations
-│   ├── PixelFXColor.h               # Color space operations
-│   ├── PixelFXConvolution.h         # Filter operations
-│   ├── PixelFXHistogram.h           # Histogram operations
-│   └── PixelFXIO.h                  # File I/O operations
+│   ├── UltraCanvasIODevice.h           # Base device interface
+│   ├── UltraCanvasIODeviceTypes.h      # Types and enumerations
+│   ├── UltraCanvasIODeviceManager.h    # Central manager
+│   ├── UltraCanvasIODeviceCamera.h     # Camera interface
+│   └── UltraCanvasGPIOController.h     # GPIO interface
 ├── core/
-│   ├── PixelFX.cpp                  # Core implementation
-│   └── PixelFXEngine.cpp            # libvips wrapper
-└── Plugins/
-    ├── JPEG/                        # libjpeg-turbo
-    ├── PNG/                         # libpng/libspng
-    ├── WebP/                        # libwebp
-    └── AVIF/                        # libavif
-```
+│   ├── UltraCanvasIODevice.cpp
+│   ├── UltraCanvasIODeviceManager.cpp
+│   └── UltraCanvasIODeviceSupport_eSCL.cpp
+└── OS/
+    ├── Linux/
+    │   ├── UltraCanvasIODeviceSupport_Linux.cpp      # SANE
+    │   ├── UltraCanvasIODeviceSupport_Camera.cpp     # V4L2
+    │   └── UltraCanvasGPIOSupport_Linux.cpp          # libgpiod
+    ├── MSWindows/
+    │   └── UltraCanvasIODeviceSupport_Windows.cpp    # WIA/TWAIN
+    └── MacOS/
+        └── UltraCanvasIODeviceSupport_MacOS.cpp      # ICA
+
+
+## Technical Stack
+
+- **Language:** C++20
+- **Scanner Libraries:** SANE, WIA COM, TWAIN DSM, ImageCapture Framework
+- **Camera Libraries:** V4L2, Media Foundation, AVFoundation, libgphoto2, FFmpeg (RTSP)
+- **GPIO Library:** libgpiod
+- **Build System:** CMake
 
 ---
 
-## Usage Example
+## Design Principles
 
-```cpp
-#include "PixelFX.h"
-
-// Simple yet powerful
-PixelFX::ImageData image;
-PixelFX::Load("photo.jpg", image);
-
-// Transform
-PixelFX::Resize(image, 800, 600, PixelFX::Quality::High);
-PixelFX::Rotate(image, 90);
-
-// Enhance
-PixelFX::Sharpen(image, 1.5);
-PixelFX::ColorBalance(image, 1.1, 1.0, 0.95);
-PixelFX::AutoContrast(image);
-
-// Save in any format
-PixelFX::Save("enhanced.webp", image, 85);
-```
+- Unified API across all platforms and protocols
+- Platform-specific code isolated in OS folders
+- Plugin-based architecture for extensibility
+- Thread-safe device management
+- Hot-plug device detection
+- Comprehensive error handling
 
 ---
 
-## Operation Categories
+## Status
 
-### Arithmetic & Mathematical
-Pixel-perfect calculations including add, subtract, multiply, divide, trigonometric functions, statistical analysis (min, max, mean, deviation), and complex number operations.
-
-### Color Space
-Seamless conversions between RGB, sRGB, scRGB, HSV, HSL, Lab, LCh, CMYK, XYZ, Yxy, and specialized color spaces. ICC profile support included.
-
-### Convolution & Filtering
-Gaussian blur, sharpen, edge detection (Sobel, Canny, Prewitt), custom kernel convolution, and separable filters for optimized performance.
-
-### Histogram Processing
-Analysis, cumulative histograms, equalization, matching, local contrast enhancement, and entropy calculation.
-
-### Geometric Transforms
-High-quality resize with multiple interpolation methods, rotation, affine transforms, perspective correction, and smart cropping.
-
-### Drawing Operations
-Anti-aliased shapes, lines, circles, rectangles, flood fill, image compositing, and text rendering.
-
----
-
-## Use Cases
-
-- **Photo Editing** — Complete toolkit for filters, adjustments, and enhancements
-- **Medical Imaging** — Precision processing with floating-point accuracy
-- **Web Services** — Fast thumbnail generation and format conversion
-- **Scientific Analysis** — Statistical tools and frequency domain processing
-- **Machine Learning** — Image preprocessing and augmentation pipelines
-- **Game Development** — Texture processing and dynamic asset generation
-
----
-
-## Technical Foundation
-
-PixelFX leverages battle-tested libraries:
-
-| Library | Purpose | License |
-|---------|---------|---------|
-| libvips | Core processing engine | LGPL-2.1 |
-| libjpeg-turbo | JPEG codec | BSD-3 |
-| libpng | PNG codec | libpng |
-| libwebp | WebP codec | BSD-3 |
-| libavif | AVIF codec | BSD-2 |
-| libtiff | TIFF codec | libtiff |
-
----
-
-## Integration with UltraCanvas
-
-PixelFX integrates seamlessly with the UltraCanvas ecosystem:
-
-- Direct rendering to UltraCanvas surfaces
-- Unified color management with vector graphics
-- Consistent plugin architecture across all media types
-- Single API for bitmap, vector, and text operations
+| Component | Linux | Windows | macOS |
+|-----------|-------|---------|-------|
+| Scanners | ✅ | ✅ | ✅ |
+| Webcams | ✅ | ✅ | ✅ |
+| DSLR Cameras | ✅ | ✅ | ✅ |
+| Network Cameras | ✅ | ✅ | ✅ |
+| GPIO | ✅ | — | — |
 
 ---
 
 ## License
 
-Open Source — Part of the UltraCanvas Framework
+Open Source — Part of the ULTRA OS Project
 
 ---
 
